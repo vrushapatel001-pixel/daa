@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plagiarism Detection using String Matching Algorithms</title>
+<link href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;700&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e8edf1;--panel:#f6f8fa;--ink:#1c2733;--mute:#5d6b78;--line:#b9c4cd;--hl:#ffd93d;--hl2:#ff9ec1;--btn:#1c2733;--btnt:#f6f8fa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141b22;--panel:#1c252e;--ink:#e6ebef;--mute:#8d9aa6;--line:#3a4753;--hl:#b8940a;--hl2:#a8446f;--btn:#e6ebef;--btnt:#141b22}}
+:root[data-theme="dark"]{--bg:#141b22;--panel:#1c252e;--ink:#e6ebef;--mute:#8d9aa6;--line:#3a4753;--hl:#b8940a;--hl2:#a8446f;--btn:#e6ebef;--btnt:#141b22}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 17px/1.65 Literata,Georgia,serif}
+main{max-width:1080px;margin:0 auto;padding:40px 20px 80px}
+h1{font:700 clamp(32px,5.5vw,56px)/1.03 'Familjen Grotesk',system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 12px;max-width:15em}
+h2{font:700 24px 'Familjen Grotesk',system-ui,sans-serif;margin:32px 0 6px}
+h3{font:700 19px 'Familjen Grotesk',system-ui,sans-serif;margin:0 0 4px}
+.lede{max-width:36em;color:var(--mute);margin:0 0 24px}
+nav{display:flex;gap:4px;border-bottom:2px solid var(--ink);margin-bottom:28px;flex-wrap:wrap}
+nav button{background:none;color:var(--ink);padding:10px 18px;border-radius:3px 3px 0 0;font-weight:500}
+nav button[aria-selected=true]{background:var(--ink);color:var(--btnt)}
+.tab{display:none}.tab.on{display:block}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label{font:500 15px 'Familjen Grotesk',system-ui,sans-serif;display:block;margin-bottom:6px}
+textarea,select{width:100%;border:1.5px solid var(--line);background:var(--panel);color:var(--ink);padding:12px;font:inherit;font-size:15px;line-height:1.6;border-radius:3px}
+textarea{height:210px;resize:vertical}
+select{width:auto;padding:8px}
+:focus-visible{outline:3px solid var(--hl2);outline-offset:2px}
+.ctl{display:flex;flex-wrap:wrap;gap:18px;align-items:center;margin:16px 0}
+.ctl label{margin:0}
+input[type=range]{accent-color:var(--ink);width:150px;vertical-align:middle}
+button{font:700 16px 'Familjen Grotesk',system-ui,sans-serif;background:var(--btn);color:var(--btnt);border:0;padding:11px 24px;border-radius:3px;cursor:pointer}
+button.sm{padding:6px 14px;font-size:14px}
+.hint{font-size:14px;color:var(--mute);margin:0 0 16px}
+#out{display:none}
+.verdict{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:8px 0 24px}
+.v{border-top:4px solid var(--ink);padding-top:8px}
+.v b{font:700 clamp(40px,8vw,76px)/1 'Familjen Grotesk',system-ui,sans-serif;letter-spacing:-.03em}
+.v span{display:block;color:var(--mute);font-size:15px}
+.doc{background:var(--panel);border:1.5px solid var(--line);padding:16px;border-radius:3px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:15px;line-height:1.85;max-height:340px;overflow:auto}
+mark{background:linear-gradient(transparent 12%,var(--hl) 12%,var(--hl) 92%,transparent 92%);color:inherit;padding:0 1px}
+mark.on{background:linear-gradient(transparent 12%,var(--hl2) 12%,var(--hl2) 92%,transparent 92%)}
+ol.l{padding:0;margin:10px 0;list-style:none}
+ol.l li{border-left:4px solid var(--hl);padding:3px 0 3px 14px;margin:0 0 10px;cursor:pointer;max-width:46em}
+small{display:block;color:var(--mute);font-size:13px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:15px;background:var(--panel)}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--bg);font-family:'Familjen Grotesk',system-ui,sans-serif}
+td.n{font-variant-numeric:tabular-nums;text-align:right}
+.bar{height:8px;background:var(--hl);margin-top:4px;min-width:2px}
+pre{background:var(--panel);border:1.5px solid var(--line);padding:14px;border-radius:3px;overflow-x:auto;font:13.5px/1.6 ui-monospace,Menlo,Consolas,monospace;margin:8px 0 18px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+p{max-width:42em}
+@media (max-width:720px){.pair,.verdict{grid-template-columns:1fr}}
+td[contenteditable]{background:var(--bg);min-width:150px}ol.s{padding-left:22px;max-width:42em}#info label{display:block;font-family:Literata,Georgia,serif;font-size:17px;margin:4px 0}
+</style>
+</head>
+<body>
+<main>
+<h1>Plagiarism Detection using String Matching Algorithms</h1>
+<p class="lede">DAA mini project, String Matching unit: the naive algorithm, Rabin–Karp and Knuth–Morris–Pratt. Paste a submission and a source, and the page marks the shared phrases and shows how much work each algorithm did.</p>
+<nav role="tablist">
+<button role="tab" aria-selected="true" data-t="problem">Problem</button>
+<button role="tab" aria-selected="false" data-t="algo">Algorithms</button>
+<button role="tab" aria-selected="false" data-t="check">Implementation</button>
+<button role="tab" aria-selected="false" data-t="bench">Testing and performance</button>
+<button role="tab" aria-selected="false" data-t="info">Project details</button>
+</nav>
+
+<section class="tab on" id="problem">
+<h2 style="margin-top:0">Problem identification</h2>
+<p>Copied text is hard to spot by eye, especially in long documents. Teachers and editors need a fast, repeatable way to find passages that appear word for word in another text. This project finds them with string matching algorithms and compares how the algorithms perform.</p>
+<div class="scroll"><table>
+<tr><th>Inputs</th><td>A submitted text S, a source text T, and k, the shortest phrase length in words (3 to 10).</td></tr>
+<tr><th>Outputs</th><td>The overlap percentage of each text, both texts with shared phrases marked, a list of shared passages, and comparisons and time for each algorithm.</td></tr>
+<tr><th>Constraints</th><td>Exact matches only, after lowercasing and removing punctuation. Reworded text is not detected. Everything runs in the browser, so very large inputs are slow.</td></tr>
+<tr><th>Objectives</th><td>Find every shared phrase of k or more words. Compare Naive, Rabin–Karp and KMP on comparisons and time. Check the measured results against the theoretical complexity.</td></tr>
+</table></div>
+<h2>Background study</h2>
+<p>Exact-match tools search for copied phrases directly. Fingerprinting tools such as MOSS hash many phrases and compare the hashes, which is where Rabin–Karp's rolling hash is used. Semantic tools find reworded text with language models. They go well beyond this syllabus unit, so they are out of scope.</p>
+<h2>Algorithm selection</h2>
+<p>The technique is String Matching (syllabus unit 7). Naive is the baseline. Rabin–Karp is chosen because hashing scales to many phrases. KMP is chosen because it guarantees linear time per search. Together they show the trade-off between simple, hashed and guaranteed approaches.</p>
+<h2>How the checker works</h2>
+<ol class="s">
+<li>Lowercase both texts and strip punctuation.</li>
+<li>Cut the submission into every run of k consecutive words.</li>
+<li>Search the source for each run with the chosen algorithm, matching at word boundaries.</li>
+<li>Mark every word covered by a match.</li>
+<li>Repeat with the texts swapped, then report both percentages.</li>
+</ol>
+<h2>Development flow</h2>
+<p class="hint">Problem, then algorithm, implementation, complexity analysis, testing and performance evaluation. Each has a place on this site.</p>
+<div class="ctl"><button class="sm" type="button" data-go="algo">Algorithm and complexity analysis</button><button class="sm" type="button" data-go="check">Implementation</button><button class="sm" type="button" data-go="bench">Testing and performance</button></div>
+</section>
+
+<section class="tab" id="check">
+<p class="hint">Given a submitted text S and a source text T, find every phrase of at least k words in S that also occurs in T. Input: two texts and k. Output: the marked texts, the percentage of each that overlaps, and the shared passages.</p>
+<div class="pair">
+<div><label for="a">Submitted text</label><textarea id="a"></textarea></div>
+<div><label for="b">Source text</label><textarea id="b"></textarea></div>
+</div>
+<div class="ctl">
+<label for="k">Shortest phrase: <b id="kv">5</b> words</label>
+<input id="k" type="range" min="3" max="10" value="5">
+<label for="alg">Show matches from</label>
+<select id="alg"><option value="kmp">Knuth–Morris–Pratt</option><option value="rk">Rabin–Karp</option><option value="naive">Naive</option></select>
+<button id="go" type="button">Compare texts</button>
+</div>
+<section id="out" aria-live="polite">
+<div class="verdict">
+<div class="v"><b id="pa">0%</b><span>of the submission appears in the source</span></div>
+<div class="v"><b id="pb">0%</b><span>of the source appears in the submission</span></div>
+</div>
+<div class="pair">
+<div><label>Submission, marked</label><div class="doc" id="da"></div></div>
+<div><label>Source, marked</label><div class="doc" id="db"></div></div>
+</div>
+<h2>Shared passages</h2>
+<p class="hint" style="margin:0">Select one to find it in both texts.</p>
+<ol class="l" id="list"></ol>
+<h2>Work done on this input</h2>
+<p class="hint">Every algorithm finds the same matches. They differ in character comparisons and time. Each one searched for every k-word phrase of the submission in the source.</p>
+<div class="scroll"><table id="work"></table></div>
+</section>
+</section>
+
+<section class="tab" id="algo">
+<p class="hint">Method: each k-word phrase of the submission (the pattern, length m) is searched for in the source text (length n). Both texts are lowercased and stripped of punctuation first. Phrases are matched at word boundaries, so “cat” never matches inside “category”.</p>
+<div class="cols">
+<div><h3>Naive</h3>
+<pre>for i = 0 to n - m
+  j = 0
+  while j &lt; m and T[i+j] = P[j]
+    j = j + 1
+  if j = m: report i</pre>
+<p>Slides the pattern one position at a time and compares from the left.</p></div>
+<div><h3>Knuth–Morris–Pratt</h3>
+<pre>lps = prefix table of P
+j = 0
+for i = 0 to n - 1
+  while j &gt; 0 and T[i] != P[j]
+    j = lps[j-1]
+  if T[i] = P[j]: j = j + 1
+  if j = m: report i-m+1
+     j = lps[j-1]</pre>
+<p>Never moves backwards in T. After a mismatch the prefix table says how much of the pattern still matches.</p></div>
+<div><h3>Rabin–Karp</h3>
+<pre>hp = hash(P); ht = hash(T[0..m-1])
+for i = 0 to n - m
+  if hp = ht and T[i..i+m-1] = P
+    report i
+  ht = roll(ht, T[i], T[i+m])</pre>
+<p>Compares a number for each window and checks characters only when the hashes agree. A rolling hash updates in O(1).</p></div>
+</div>
+<h2>Complexity</h2>
+<div class="scroll"><table>
+<tr><th>Algorithm</th><th>Best case</th><th>Average case</th><th>Worst case</th><th>Space</th><th>Worst-case input</th></tr>
+<tr><td>Naive</td><td>O(n)</td><td>O(n)</td><td>O(n·m)</td><td>O(1)</td><td>T = aaaa…a, P = aa…ab</td></tr>
+<tr><td>KMP</td><td>O(n + m)</td><td>O(n + m)</td><td>O(n + m)</td><td>O(m)</td><td>None; always linear</td></tr>
+<tr><td>Rabin–Karp</td><td>O(n + m)</td><td>O(n + m)</td><td>O(n·m)</td><td>O(1)</td><td>Every window hash collides</td></tr>
+</table></div>
+<p>For a submission of w words and k-word phrases, the checker runs about w − k + 1 searches. Total cost is that count times the cost per search. With KMP this is O(w·(n + m)).</p>
+<h2>Step-by-step working</h2>
+<p><b>Naive.</b> Put the pattern at position 0 of the text and compare left to right. On the first mismatch, shift the pattern by one and start again. A full match is reported.</p>
+<p><b>KMP.</b> First build the prefix table, which stores for each prefix of the pattern the length of its longest proper prefix that is also a suffix. Then scan the text once. On a mismatch, use the table to fall back inside the pattern instead of moving back in the text.</p>
+<p><b>Rabin–Karp.</b> Hash the pattern and the first window of the text. At each position compare the two hashes. Only when they are equal, compare the characters to rule out a collision. Then slide the window by removing the old first character and adding the new last one.</p>
+<h2>Why these three</h2>
+<p>Naive is the baseline. KMP guarantees linear time per search. Rabin–Karp is the one used in practice by plagiarism tools, because hashing extends naturally to many patterns at once. Libraries: none. The project is plain JavaScript with no frameworks.</p>
+<h2>References</h2>
+<p>Cormen, Leiserson, Rivest, Stein. <i>Introduction to Algorithms</i>, chapter on string matching. Knuth, Morris, Pratt (1977), “Fast pattern matching in strings”. Karp and Rabin (1987), “Efficient randomized pattern-matching algorithms”. Sedgewick and Wayne, <i>Algorithms</i>, substring search.</p>
+</section>
+
+<section class="tab" id="bench">
+<h2 style="margin-top:0">Performance evaluation</h2>
+<p class="hint">Each algorithm searches for a 40-character pattern and counts every match. Average case uses random lowercase text. Worst case uses T = aaaa…a with P = aaa…ab, which forces the naive method to its limit. Times are averages over repeated runs in your browser, so they change a little each run.</p>
+<div class="ctl"><button id="run" type="button">Run benchmark</button><span id="bstat" class="hint" style="margin:0"></span></div>
+<div class="scroll"><table id="bt"><tr><th>Input size</th><th>Algorithm</th><th>Average: ms</th><th>Average: comparisons</th><th>Worst: ms</th><th>Worst: comparisons</th></tr></table></div>
+<h2>Theory against measurement</h2>
+<p id="cmp" class="hint">Run the benchmark to see this.</p>
+<h2>Test cases</h2>
+<p class="hint">Sample inputs with the result you should see at k = 5. Load one into the checker and compare.</p>
+<div class="scroll"><table id="tt"><tr><th>Case</th><th>What it checks</th><th>Expected</th><th></th></tr></table></div>
+</section>
+<section class="tab" id="info">
+<h2 style="margin-top:0">Group responsibilities</h2>
+<p class="hint">Click a name cell to type. Every member must still be able to explain the whole project.</p>
+<div class="scroll"><table>
+<tr><th>Member</th><th>Suggested primary responsibility</th><th>Name</th></tr>
+<tr><td>Member 1</td><td>Problem analysis and background study</td><td contenteditable="true"></td></tr>
+<tr><td>Member 2</td><td>Algorithm design and complexity analysis</td><td contenteditable="true"></td></tr>
+<tr><td>Member 3</td><td>Implementation and testing</td><td contenteditable="true"></td></tr>
+<tr><td>Member 4</td><td>Interface, visualization, results and documentation</td><td contenteditable="true"></td></tr>
+</table></div>
+<h2>Screenshots to take</h2>
+<p class="hint">Take them from this running project only.</p>
+<div class="scroll"><table>
+<tr><th>Screen</th><th>Where to capture it</th></tr>
+<tr><td>Input</td><td>Implementation tab, the two text boxes and the phrase length slider</td></tr>
+<tr><td>Processing</td><td>Implementation tab, the “Work done on this input” table</td></tr>
+<tr><td>Output</td><td>Implementation tab, the marked texts, percentages and shared passages</td></tr>
+<tr><td>Performance</td><td>Testing and performance tab, after you press Run benchmark</td></tr>
+</table></div>
+<h2>Academic and project integrity</h2>
+<p>AI tools were used for brainstorming and assistance. The group has read the code and can explain it. Libraries and frameworks: none. The page loads the Familjen Grotesk and Literata fonts from Google Fonts. Sources are listed under References in the Algorithms tab.</p>
+<h2>Final submission checklist</h2>
+<label><input type="checkbox"> Complete source code</label>
+<label><input type="checkbox"> Project report</label>
+<label><input type="checkbox"> PowerPoint presentation</label>
+<label><input type="checkbox"> Screenshots of the working project</label>
+<label><input type="checkbox"> Test data and results</label>
+<label><input type="checkbox"> References</label>
+<label><input type="checkbox"> Working demonstration during evaluation</label>
+</section>
+</main>
+<script>
+var $=function(i){return document.getElementById(i)};
+document.querySelectorAll('nav button').forEach(function(b){b.onclick=function(){document.querySelectorAll('nav button').forEach(function(x){x.setAttribute('aria-selected',x===b)});document.querySelectorAll('.tab').forEach(function(t){t.classList.toggle('on',t.id===b.dataset.t)})}});
+document.querySelectorAll('[data-go]').forEach(function(b){b.onclick=function(){document.querySelector('nav [data-t='+b.dataset.go+']').click()}});
+$('k').oninput=function(){$('kv').textContent=this.value};
+
+/* ---- the three algorithms: each returns {occ, cmp} ---- */
+function naive(t,p,all){var n=t.length,m=p.length,c=0,o=0;for(var i=0;i<=n-m;i++){var j=0;while(j<m){c++;if(t.charCodeAt(i+j)!==p.charCodeAt(j))break;j++}if(j===m){o++;if(!all)break}}return{occ:o,cmp:c}}
+function kmp(t,p,all){var n=t.length,m=p.length,c=0,o=0,l=new Array(m).fill(0),k=0,i;
+for(i=1;i<m;i++){while(k>0&&p[i]!==p[k]){c++;k=l[k-1]}c++;if(p[i]===p[k])k++;l[i]=k}
+var j=0;for(i=0;i<n;i++){while(j>0&&t[i]!==p[j]){c++;j=l[j-1]}c++;if(t[i]===p[j])j++;if(j===m){o++;if(!all)break;j=l[j-1]}}return{occ:o,cmp:c}}
+function rk(t,p,all){var n=t.length,m=p.length,c=0,o=0,B=256,M=1000003,hp=0,ht=0,hb=1,i,j;if(m>n)return{occ:0,cmp:0};
+for(i=0;i<m-1;i++)hb=hb*B%M;
+for(i=0;i<m;i++){hp=(hp*B+p.charCodeAt(i))%M;ht=(ht*B+t.charCodeAt(i))%M}
+for(i=0;i<=n-m;i++){c++;if(hp===ht){j=0;while(j<m){c++;if(t[i+j]!==p[j])break;j++}if(j===m){o++;if(!all)break}}
+if(i<n-m)ht=((ht-t.charCodeAt(i)*hb%M+M)*B+t.charCodeAt(i+m))%M}return{occ:o,cmp:c}}
+var ALG={naive:naive,kmp:kmp,rk:rk},NAME={naive:'Naive',kmp:'Knuth–Morris–Pratt',rk:'Rabin–Karp'};
+
+/* ---- plagiarism pipeline ---- */
+function tok(t){var r=[],m,re=/[\p{L}\p{N}']+/gu;while(m=re.exec(t))r.push({w:m[0].toLowerCase().replace(/’/g,"'"),s:m.index,e:m.index+m[0].length});return r}
+function cover(T,src,k,f){var c=new Array(T.length).fill(false),cmp=0;for(var i=0;i+k<=T.length;i++){var p=' '+T.slice(i,i+k).map(function(x){return x.w}).join(' ')+' ';var r=f(src,p,false);cmp+=r.cmp;if(r.occ)for(var j=i;j<i+k;j++)c[j]=true}return{c:c,cmp:cmp}}
+function src(T){return ' '+T.map(function(x){return x.w}).join(' ')+' '}
+function runs(T,c){var r=[],i=0;while(i<T.length){if(c[i]){var j=i;while(j+1<T.length&&c[j+1])j++;r.push([i,j]);i=j+1}else i++}return r}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function paint(text,T,R,tag){var o='',p=0;R.forEach(function(r,n){var s=T[r[0]].s,e=T[r[1]].e;o+=esc(text.slice(p,s))+'<mark data-'+tag+'="'+n+'">'+esc(text.slice(s,e))+'</mark>';p=e});return o+esc(text.slice(p))}
+var RA,RB,TA,TB,TXA;
+$('go').onclick=function(){
+var a=$('a').value,b=$('b').value,k=+$('k').value;TXA=a;TA=tok(a);TB=tok(b);var sa=src(TA),sb=src(TB),rows='',shown=$('alg').value,ca,cb;
+rows='<tr><th>Algorithm</th><th>Character comparisons</th><th>Time (ms)</th><th>Matches found</th></tr>';
+['naive','kmp','rk'].forEach(function(id){var t0=performance.now(),x=cover(TA,sb,k,ALG[id]),y=cover(TB,sa,k,ALG[id]),ms=performance.now()-t0;
+if(id===shown){ca=x.c;cb=y.c}
+rows+='<tr><td>'+NAME[id]+'</td><td class="n">'+(x.cmp+y.cmp).toLocaleString()+'</td><td class="n">'+ms.toFixed(2)+'</td><td class="n">'+x.c.filter(Boolean).length+' / '+y.c.filter(Boolean).length+' words</td></tr>'});
+$('work').innerHTML=rows;
+RA=runs(TA,ca);RB=runs(TB,cb);
+var n=function(c){return c.filter(Boolean).length};
+$('pa').textContent=(TA.length?Math.round(100*n(ca)/TA.length):0)+'%';$('pb').textContent=(TB.length?Math.round(100*n(cb)/TB.length):0)+'%';
+$('da').innerHTML=paint(a,TA,RA,'a');$('db').innerHTML=paint(b,TB,RB,'b');
+var L=RA.map(function(r,i){return{i:i,len:r[1]-r[0]+1,t:a.slice(TA[r[0]].s,TA[r[1]].e)}}).sort(function(x,y){return y.len-x.len}),ul=$('list');ul.innerHTML='';
+if(!L.length)ul.innerHTML='<li style="border-color:var(--line);cursor:default">No run of '+k+' or more words appears in both texts.</li>';
+L.forEach(function(x){var li=document.createElement('li');li.innerHTML=esc(x.t)+'<small>'+x.len+' words</small>';li.onclick=function(){focusRun(x.i,x.t)};ul.appendChild(li)});
+$('out').style.display='block';$('out').scrollIntoView({behavior:'smooth'})};
+function focusRun(i,t){document.querySelectorAll('mark.on').forEach(function(m){m.classList.remove('on')});
+var ma=document.querySelector('mark[data-a="'+i+'"]');if(ma){ma.classList.add('on');ma.scrollIntoView({block:'nearest'})}
+var key=tok(t).map(function(x){return x.w}).join(' ');
+RB.forEach(function(r,n){var s=TB.slice(r[0],r[1]+1).map(function(x){return x.w}).join(' ');if(s.indexOf(key)>-1||key.indexOf(s)>-1){var m=document.querySelector('mark[data-b="'+n+'"]');if(m){m.classList.add('on');m.scrollIntoView({block:'nearest'})}}})}
+
+/* ---- test cases ---- */
+var S1="Photosynthesis is the process by which green plants turn light into chemical energy. Plants absorb sunlight using chlorophyll, which is stored in the chloroplasts of their leaf cells.";
+var CASES=[
+['Identical texts','Same text on both sides.',S1,S1,'100% and 100%'],
+['No overlap','Unrelated texts.',S1,'The committee postponed the vote until the budget report arrives from the regional office next month.','0% and 0%'],
+['Copied with changes','Case and punctuation differ, one sentence is rewritten.',S1,'PHOTOSYNTHESIS is the process, by which green plants turn light into chemical energy! Oxygen is a by-product. Plants absorb sunlight using chlorophyll which is stored in the chloroplasts of their leaf cells','Both texts mostly marked; case and punctuation are ignored'],
+['Short coincidence','Only a common 3-word phrase is shared.','He walked in the middle of the night.','They met in the middle of the road.','0% at k = 5; matches appear at k = 3 or 4']];
+CASES.forEach(function(c,i){var tr=document.createElement('tr');tr.innerHTML='<td>'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[4]+'</td><td><button class="sm" type="button">Load</button></td>';tr.querySelector('button').onclick=function(){$('a').value=c[2];$('b').value=c[3];document.querySelector('[data-t=check]').click();$('go').click()};$('tt').appendChild(tr)});
+$('a').value=S1;$('b').value=CASES[2][3];
+
+/* ---- benchmark ---- */
+function rnd(n){var s='',x=12345;for(var i=0;i<n;i++){x=(x*1103515245+12345)&0x7fffffff;s+=String.fromCharCode(97+x%26)}return s}
+function time(f,t,p){var reps=Math.max(1,Math.floor(400000/t.length)),r,t0=performance.now();for(var i=0;i<reps;i++)r=f(t,p,true);return{ms:(performance.now()-t0)/reps,cmp:r.cmp}}
+$('run').onclick=function(){$('bstat').textContent='Running…';$('run').disabled=true;
+setTimeout(function(){var sizes=[1000,20000,200000],M=40,rows='',res={};
+sizes.forEach(function(n){var ta=rnd(n),pa=ta.substr(n/2,M),tw=new Array(n+1).join('a'),pw=new Array(M).join('a')+'b';
+['naive','kmp','rk'].forEach(function(id){var A=time(ALG[id],ta,pa),W=time(ALG[id],tw,pw);res[id+n]=W;
+rows+='<tr><td class="n">'+({1000:'Small, ',20000:'Medium, ',200000:'Large, '})[n]+n.toLocaleString()+' characters</td><td>'+NAME[id]+'</td><td class="n">'+A.ms.toFixed(3)+'</td><td class="n">'+A.cmp.toLocaleString()+'</td><td class="n">'+W.ms.toFixed(3)+'<div class="bar" style="width:'+Math.min(100,W.ms*40)+'%"></div></td><td class="n">'+W.cmp.toLocaleString()+'</td></tr>'})});
+var tb=$('bt');tb.innerHTML=tb.rows[0].outerHTML+rows;
+var nv=res.naive200000.cmp,km=res.kmp200000.cmp;
+$('cmp').innerHTML='At 200,000 characters and m = 40, the naive worst case did '+nv.toLocaleString()+' comparisons. Theory says n·m = '+(200000*(M-0)).toLocaleString()+', so the measurement follows O(n·m). KMP did '+km.toLocaleString()+', close to the 2n = '+(400000).toLocaleString()+' bound for O(n + m). Rabin–Karp collapses to naive on this input because every window hash matches, which is why its worst case is O(n·m). On random text all three stay near n comparisons, as the average-case column shows.';
+$('bstat').textContent='Done.';$('run').disabled=false},30)};
+</script>
+</body>
+</html>
